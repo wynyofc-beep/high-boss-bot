@@ -1,4 +1,4 @@
-const axios = require('axios');
+import axios from 'axios';
 
 export default async function handler(req, res) {
     const { canal } = req.query; // Pega o canal, ex: ?canal=globo
