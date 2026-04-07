@@ -24,7 +24,8 @@ export default async function handler(req, res) {
         // Vai para o site (Exemplo: Rede Canais)
         // O link do site pode vir via parâmetro ou fixo
         const urlAlvo = "https://redecanais.li/canais/globo-sp.html";
-        await page.goto(urlAlvo, { waitUntil: 'networkidle2', timeout: 30000 });
+        await page.goto(urlAlvo, { waitUntil: 'domcontentloaded', timeout: 60000 });
+        
 
         // A MÁGICA: Ele "escuta" as requisições de rede para achar o .m3u8 ou .txt
         // Igual o 1DM faz no log de agente
