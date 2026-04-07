@@ -3,11 +3,12 @@ import axios from 'axios';
 export default async function handler(req, res) {
     const { canal } = req.query; // Pega o canal, ex: ?canal=globo
 // canais aqui
-    const FONTES = {
-        "globo": "https://canais.online/globo-sp-ao-vivo/",
-        "sportv": "https://canais.online/sportv-ao-vivo/",
-        "premiere": "https://canais.online/premiere-clubes-ao-vivo/"
+        const FONTES = {
+        "globo": "https://redecanais.li/canais/globo-sp.html",
+        "sportv": "https://redecanais.li/canais/sportv.html",
+        "premiere": "https://redecanais.li/canais/premiere.html"
     };
+    
 
     const urlAlvo = FONTES[canal];
 
