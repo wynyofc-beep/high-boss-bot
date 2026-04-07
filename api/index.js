@@ -6,11 +6,14 @@ export default async function handler(req, res) {
     res.setHeader('Access-Control-Allow-Origin', '*');
 
     // Mapeamento de canais (adicione quantos quiser)
+        // No seu objeto FONTES, atualize os domínios:
     const FONTES = {
-        "globo": "https://redecanais.li/canais/globo-sp.html",
-        "sportv": "https://redecanais.li/canais/sportv.html",
-        "premiere": "https://redecanais.li/canais/premiere.html"
+        "globo": "https://www.redecanais.wf/canais/globo-sp.html", // Teste .wf ou .la
+        "sportv": "https://www.redecanais.la/canais/sportv.html",
+        "sportv": "https://www.redecanais.wf/canais/sportv.html",
+        "premiere": "https://www.redecanais.wf/canais/premiere.html"
     };
+    
 
     const urlAlvo = FONTES[canal] || FONTES["globo"];
 
