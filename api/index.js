@@ -5,14 +5,23 @@ import axios from 'axios';
 export default async function handler(req, res) {
     const { canal } = req.query;
     
-    // Configurações para rodar no ambiente limitado da Vercel
-    const browser = await puppeteer.launch({
-    args: [...chromium.args, '--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage'],
+const browser = await puppeteer.launch({
+    args: [
+        ...chromium.args,
+        '--no-sandbox',
+        '--disable-setuid-sandbox',
+        '--disable-dev-shm-usage',
+        '--disable-accelerated-2d-canvas',
+        '--no-first-run',
+        '--no-zygote',
+        '--single-process', // Crucial para economizar memória na Vercel
+        '--disable-gpu'
+    ],
     defaultViewport: chromium.defaultViewport,
     executablePath: await chromium.executablePath(),
     headless: chromium.headless,
-    ignoreHTTPSErrors: true,
 });
+    
     
 
     try {
