@@ -8,10 +8,10 @@ export default async function handler(req, res) {
     // Mapeamento de canais (adicione quantos quiser)
         // No seu objeto FONTES, atualize os domínios:
     const FONTES = {
-        "globo": "https://www.redecanais.wf/canais/globo-sp.html", // Teste .wf ou .la
-        "sportv": "https://www.redecanais.la/canais/sportv.html",
-        "sportv": "https://www.redecanais.wf/canais/sportv.html",
-        "premiere": "https://www.redecanais.wf/canais/premiere.html"
+        "globo": "https://futemax.gy/canais/globo-sp.html",
+        "sportv": "https://futemax.gy/canais/sportv.html",
+        "sportv": "https://futemax.gy/canais/sportv.html",
+        "premiere": "https://futemax.gy/canais/premiere.html"
     };
     
 
