@@ -1,38 +1,38 @@
+import chromium from '@sparticuz/chromium';
+import puppeteer from 'puppeteer-core';
 import axios from 'axios';
 
 export default async function handler(req, res) {
-    const { canal } = req.query;
-    res.setHeader('Access-Control-Allow-Origin', '*');
+    // Configurações do Navegador Fantasma
+    const browser = await puppeteer.launch({
+        args: chromium.args,
+        executablePath: await chromium.executablePath(),
+        headless: true,
+    });
 
-    // O site "mãe" onde o 1DM achou esse link
-    // Exemplo: se foi no 'canais.online', colocamos a URL dele aqui
-    const SITE_FONTE = "https://redecanais.li/canais/globo-sp.html"; 
+    const page = await browser.newPage();
+    
+    // 1. O Bot entra no site (ex: Rede Canais)
+    await page.goto('https://redecanais.li/canais/globo-sp.html', { waitUntil: 'networkidle2' });
 
-    try {
-        const response = await axios.get(SITE_FONTE, {
-            headers: {
-                'User-Agent': 'Mozilla/5.0 (Linux; Android 10; Moto G(8))'
-            }
-        });
+    // 2. Ele "espera" o link aparecer no tráfego de rede (igual o 1DM faz)
+    const linkCapturado = await page.evaluate(() => {
+        // Aqui dentro o bot procura no código-fonte o link .m3u8 ou .txt
+        return document.querySelector('video')?.src || "Link não achado";
+    });
 
-        const html = response.data;
+    await browser.close();
 
-        // REGEX NINJA: Procura por padrões que tenham 'cloudfront' e terminem em '.txt' ou '.m3u8'
-        const regexCloudfront = /https?:\/\/[\w\.-]+cloudfront-net\.online\/token\/[\w]+\/[\w\.-]+\.(txt|m3u8)/g;
+    // 3. ENVIAR PARA O TELEGRAM (O seu "Banco de Dados")
+    const TELEGRAM_TOKEN = "SEU_TOKEN_AQUI";
+    const CHAT_ID = "ID_DO_SEU_CANAL";
+    const msg = `CANAL: GLOBO | LINK: ${linkCapturado}`;
+
+    await axios.post(`https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage`, {
+        chat_id: CHAT_ID,
+        text: msg
+    });
+
+    res.json({ status: "Link capturado e salvo no Telegram!", link: linkCapturado });
+                                        }
         
-        const matches = html.match(regexCloudfront);
-
-        if (matches) {
-            // O bot pegou o link igual o 1DM faria!
-            return res.json({ url: matches[0] });
-        }
-
-        return res.status(404).json({ 
-            erro: "O Token mudou e o bot não encontrou no HTML",
-            debug: "Tente atualizar a fonte no código" 
-        });
-
-    } catch (error) {
-        return res.status(500).json({ erro: "Erro ao acessar o servidor da fonte" });
-    }
-}
