@@ -8,11 +8,12 @@ export default async function handler(req, res) {
     // Mapeamento de canais (adicione quantos quiser)
         // No seu objeto FONTES, atualize os domínios:
     const FONTES = {
-        "globo": "https://futemax.gy/canais/globo-sp.html",
-        "sportv": "https://futemax.gy/canais/sportv.html",
-        "sportv": "https://futemax.gy/canais/sportv.html",
-        "premiere": "https://futemax.gy/canais/premiere.html"
-    };
+    // A Rede Canais costuma alternar entre esses formatos:
+    "globo": "https://www.redecanais.wf/bra/globo-sp.html", // Adicionaram /bra/ às vezes
+    "sportv": "https://www.redecanais.wf/bra/sportv.html",
+    "premiere": "https://www.redecanais.wf/bra/premiere.html"
+};
+    
     
 
     const urlAlvo = FONTES[canal] || FONTES["globo"];
