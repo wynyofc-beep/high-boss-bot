@@ -5,59 +5,68 @@ export default async function handler(req, res) {
     const { canal } = req.query;
     res.setHeader('Access-Control-Allow-Origin', '*');
 
-    // Mapeamento de canais (adicione quantos quiser)
-        // No seu objeto FONTES, atualize os domínios:
-    const FONTES = {
-    // A Rede Canais costuma alternar entre esses formatos:
-    "globo": "https://www.redecanais.wf/bra/globo-sp.html", // Adicionaram /bra/ às vezes
-    "sportv": "https://www.redecanais.wf/bra/sportv.html",
-    "premiere": "https://www.redecanais.wf/bra/premiere.html"
-};
-    
-    
+    // 1. Lógica de Domínio Dinâmico (Anti-ENOTFOUND)
+    const sufixos = ['wf', 'la', 'ch', 'li', 'tv'];
+    let html = null;
+    let urlFinal = '';
 
-    const urlAlvo = FONTES[canal] || FONTES["globo"];
+    // Tenta encontrar o site em diferentes finais (.wf, .la...)
+    for (const ext of sufixos) {
+        try {
+            const urlTeste = `https://www.redecanais.${ext}/bra/${canal || 'globo-sp'}.html`;
+            const response = await axios.get(urlTeste, {
+                headers: {
+                    'User-Agent': 'Mozilla/5.0 (Linux; Android 10; Moto G(8) Power Lite) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Mobile Safari/537.36',
+                    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,webp,*/*;q=0.8',
+                    'Accept-Language': 'pt-BR,pt;q=0.9,en-US;q=0.8,en;q=0.7',
+                    'Cache-Control': 'no-cache',
+                    'Prerender-Control': 'no-cache',
+                    // Isso ajuda a pular alguns sistemas de proteção simples:
+                    'Sec-Fetch-Dest': 'document',
+                    'Sec-Fetch-Mode': 'navigate',
+                    'Sec-Fetch-Site': 'none',
+                    'Sec-Fetch-User': '?1'
+                },
+                timeout: 5000 // Se o domínio estiver morto, pula rápido pro próximo
+            });
+            
+            if (response.status === 200) {
+                html = response.data;
+                urlFinal = urlTeste;
+                break; 
+            }
+        } catch (e) { continue; }
+    }
+
+    if (!html) return res.status(404).json({ erro: "Nenhum domínio da Rede Canais respondeu." });
 
     try {
-        // 1. Baixa o HTML bruto (Rápido e leve)
-        const { data } = await axios.get(urlAlvo, {
-            headers: { 
-                'User-Agent': 'Mozilla/5.0 (Linux; Android 10; Moto G(8))',
-                'Referer': 'https://www.google.com/'
-            },
-            timeout: 8000
-        });
+        const $ = cheerio.load(html);
+        let linkM3U8 = null;
 
-        // 2. O Cheerio assume o controle
-        const $ = cheerio.load(data);
-        let linkCapturado = null;
-
-        // 3. Procura o link nos scripts (onde o Futemax e RedeCanais escondem)
+        // 2. Burlagem de Anti-PopUp e Extração de Script
+        // Varremos o HTML procurando por links Cloudfront que o site tenta esconder
         $('script').each((i, el) => {
-            const scriptContent = $(el).html();
-            // Regex para pegar .m3u8 ou .txt da Cloudfront
-            const match = scriptContent.match(/(https?[:\/\w\.-]+\.(m3u8|txt)[^"'\s]*)/);
-            if (match && !linkCapturado) {
-                linkCapturado = match[0];
-            }
+            const content = $(el).html();
+            // Regex focado em links de streaming protegidos
+            const regex = /(https?[:\/\w\.-]+cloudfront[^\s"'`]+(\.m3u8|\.txt)[^\s"'`]*)/g;
+            const matches = content.match(regex);
+            if (matches) linkM3U8 = matches[0];
         });
 
-        if (linkCapturado) {
-            // 4. Manda pro seu Banco de Dados (Telegram)
-            const TOKEN = process.env.TELEGRAM_TOKEN;
-            const ID_CANAL = process.env.TELEGRAM_CHAT_ID;
-
-            await axios.post(`https://api.telegram.org/bot${TOKEN}/sendMessage`, {
-                chat_id: ID_CANAL,
-                text: `🔥 LINK CAPTURADO (CHEERIO)\nCanal: ${canal || 'Globo'}\nLink: ${linkCapturado}`
+        if (linkM3U8) {
+            // 3. Envio Blindado ao Telegram
+            await axios.post(`https://api.telegram.org/bot${process.env.TELEGRAM_TOKEN}/sendMessage`, {
+                chat_id: process.env.TELEGRAM_CHAT_ID,
+                text: `🛡️ SISTEMA BLINDADO\nCanal: ${canal}\nFonte: ${urlFinal}\nLink: ${linkM3U8}`
             });
 
-            return res.json({ status: "Link enviado ao Telegram", url: linkCapturado });
+            return res.status(200).json({ status: "Capturado", url: linkM3U8 });
         }
 
-        return res.status(404).json({ erro: "Link não encontrado no código do site" });
+        return res.status(404).json({ erro: "Link escondido por proteção pesada (JS Challenge)" });
 
     } catch (error) {
-        return res.status(500).json({ erro: "Falha na raspagem leve", detalhe: error.message });
+        return res.status(500).json({ erro: "Falha crítica no bypass" });
     }
-                             }
+                }
