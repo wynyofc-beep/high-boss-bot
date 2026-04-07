@@ -40,8 +40,10 @@ export default async function handler(req, res) {
 
         if (linkM3U8) {
             // ENVIAR PARA O TELEGRAM (Seu Banco de Dados)
-            const TOKEN = "8295852301:AAF233unZDO5hN5JoW6vfGdcyLdvLSFDpdw";
-            const ID_CANAL = "-1003838032955"; // Ex: -100123456789
+            // Em vez de colar o número aqui, use o processo abaixo:
+const TOKEN = process.env.TELEGRAM_TOKEN;
+const ID_CANAL = process.env.TELEGRAM_CHAT_ID;
+            
             
             await axios.post(`https://api.telegram.org/bot${TOKEN}/sendMessage`, {
                 chat_id: ID_CANAL,
